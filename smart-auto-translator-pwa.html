@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مترجم ذكي مع تحويل النص للكلام التلقائي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.responsivevoice.org/responsivevoice.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans Arabic', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            direction: rtl;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .translation-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .input-section, .output-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .input-section:focus-within, .output-section:focus-within {
+            border-color: #4CAF50;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .text-area {
+            width: 100%;
+            min-height: 150px;
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 1.1rem;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .text-area:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .controls-panel {
+            background: #fff;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #e9ecef;
+            margin-bottom: 30px;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-label {
+            font-weight: bold;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .control-select, .control-input {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .control-select:focus, .control-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.2);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 150px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .language-indicator {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-size: 0.9rem;
+            color: #1976d2;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        .voice-controls {
+            background: #f0f8ff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 1px solid #b3d9ff;
+        }
+
+        .auto-speak-indicator {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 15px;
+            padding: 8px 15px;
+            font-size: 0.85rem;
+            color: #2e7d32;
+            margin-top: 10px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .auto-speak-indicator.active {
+            display: flex;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .waveform {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .waveform span {
+            width: 3px;
+            height: 10px;
+            background: currentColor;
+            animation: wave 1.2s ease-in-out infinite;
+        }
+
+        .waveform span:nth-child(1) { animation-delay: 0s; }
+        .waveform span:nth-child(2) { animation-delay: 0.1s; }
+        .waveform span:nth-child(3) { animation-delay: 0.2s; }
+        .waveform span:nth-child(4) { animation-delay: 0.3s; }
+        .waveform span:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes wave {
+            0%, 100% { height: 5px; }
+            50% { height: 15px; }
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #f44336;
+        }
+
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .pulse-animation {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .translation-panel {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🌍 المترجم الذكي مع التحويل التلقائي للكلام</h1>
+            <p>مترجم متقدم مع الذكاء الاصطناعي وتحويل تلقائي للنص إلى كلام</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Translation Panel -->
+            <div class="translation-panel">
+                <div class="input-section">
+                    <div class="section-title">
+                        📝 النص للترجمة
+                    </div>
+                    <textarea 
+                        id="inputText" 
+                        class="text-area" 
+                        placeholder="اكتب النص هنا أو استخدم الميكروفون للإدخال الصوتي..."
+                        dir="auto"
+                    ></textarea>
+                    <div id="inputLanguageIndicator" class="language-indicator" style="display: none;"></div>
+                </div>
+
+                <div class="output-section">
+                    <div class="section-title">
+                        🔄 النص المترجم
+                        <button id="speakBtn" class="btn btn-secondary" style="margin-right: auto; padding: 8px 20px; font-size: 0.9rem;">
+                            🔊 تحدث مرة أخرى
+                        </button>
+                    </div>
+                    <textarea 
+                        id="outputText" 
+                        class="text-area" 
+                        placeholder="سيظهر النص المترجم هنا ثم يبدأ الكلام تلقائياً..."
+                        readonly
+                        dir="auto"
+                    ></textarea>
+                    <div id="outputLanguageIndicator" class="language-indicator" style="display: none;"></div>
+                    <div id="autoSpeakIndicator" class="auto-speak-indicator">
+                        <span>🔊</span>
+                        <span>سيبدأ الكلام تلقائياً خلال ربع ثانية...</span>
+                    </div>
+                    
+                    <div class="voice-controls">
+                        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                            <label style="font-weight: 600;">🎙️ صوت الكلام:</label>
+                            <select id="voiceSelect" style="padding: 8px; border-radius: 5px; border: 1px solid #ddd; flex: 1; min-width: 200px;">
+                                <option value="auto">تحديد تلقائي حسب اللغة</option>
+                            </select>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <label>🎚️ السرعة:</label>
+                                <input type="range" id="speechRate" min="0.5" max="2" step="0.1" value="1" style="width: 100px;">
+                                <span id="speechRateValue">1.0x</span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 15px; display: flex; align-items: center; gap: 10px;">
+                            <label style="font-weight: 600;">⚡ تشغيل تلقائي:</label>
+                            <input type="checkbox" id="autoSpeakToggle" checked style="transform: scale(1.5);">
+                            <label for="autoSpeakToggle" style="color: #4caf50;">مفعل (ربع ثانية بعد الترجمة)</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls Panel -->
+            <div class="controls-panel">
+                <div class="control-grid">
+                    <div class="control-group">
+                        <label class="control-label">🌐 من اللغة</label>
+                        <select id="sourceLanguage" class="control-select">
+                            <option value="auto">كشف تلقائي</option>
+                            <option value="ar">العربية</option>
+                            <option value="en">English</option>
+                            <option value="es">Español</option>
+                            <option value="fr">Français</option>
+                            <option value="de">Deutsch</option>
+                            <option value="it">Italiano</option>
+                            <option value="pt">Português</option>
+                            <option value="ru">Русский</option>
+                            <option value="ja">日本語</option>
+                            <option value="ko">한국어</option>
+                            <option value="zh">中文</option>
+                            <option value="tr">Türkçe</option>
+                            <option value="hi">हिन्दी</option>
+                            <option value="ur">اردو</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">🎯 إلى اللغة</label>
+                        <select id="targetLanguage" class="control-select">
+                            <option value="ar">العربية</option>
+                            <option value="en">English</option>
+                            <option value="es">Español</option>
+                            <option value="fr">Français</option>
+                            <option value="de">Deutsch</option>
+                            <option value="it">Italiano</option>
+                            <option value="pt">Português</option>
+                            <option value="ru">Русский</option>
+                            <option value="ja">日本語</option>
+                            <option value="ko">한국어</option>
+                            <option value="zh">中文</option>
+                            <option value="tr">Türkçe</option>
+                            <option value="hi">हिन्दी</option>
+                            <option value="ur">اردو</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">⚙️ مزود الترجمة</label>
+                        <select id="translationProvider" class="control-select">
+                            <option value="google">Google Translate</option>
+                            <option value="mymemory">MyMemory (مجاني)</option>
+                            <option value="libre">LibreTranslate</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">🎭 مزود الصوت</label>
+                        <select id="ttsProvider" class="control-select">
+                            <option value="responsive">ResponsiveVoice (الأفضل)</option>
+                            <option value="browser">متصفح الويب</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="translateBtn" class="btn btn-primary">
+                        🔄 ترجم النص
+                    </button>
+                    <button id="voiceInputBtn" class="btn btn-secondary">
+                        🎤 الإدخال الصوتي
+                    </button>
+                    <button id="swapLanguagesBtn" class="btn btn-warning">
+                        🔀 تبديل اللغات
+                    </button>
+                    <button id="clearBtn" class="btn btn-secondary">
+                        🗑️ مسح النصوص
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>جاري الترجمة والمعالجة بالذكاء الاصطناعي...</p>
+            </div>
+
+            <!-- Messages -->
+            <div id="errorMessage" class="message error-message"></div>
+            <div id="successMessage" class="message success-message"></div>
+        </main>
+    </div>
+
+    <script>
+        class SmartArabicTranslator {
+            constructor() {
+                this.initializeElements();
+                this.initializeEventListeners();
+                this.initializeVoices();
+                this.loadSettings();
+                this.detectedLanguage = null;
+                this.isAutoSpeaking = false;
+                this.autoSpeakTimeout = null;
+            }
+
+            initializeElements() {
+                this.inputText = document.getElementById('inputText');
+                this.outputText = document.getElementById('outputText');
+                this.translateBtn = document.getElementById('translateBtn');
+                this.voiceInputBtn = document.getElementById('voiceInputBtn');
+                this.speakBtn = document.getElementById('speakBtn');
+                this.swapLanguagesBtn = document.getElementById('swapLanguagesBtn');
+                this.clearBtn = document.getElementById('clearBtn');
+                this.loading = document.getElementById('loading');
+                this.errorMessage = document.getElementById('errorMessage');
+                this.successMessage = document.getElementById('successMessage');
+                this.speechRateSlider = document.getElementById('speechRate');
+                this.speechRateValue = document.getElementById('speechRateValue');
+                this.voiceSelect = document.getElementById('voiceSelect');
+                this.sourceLanguage = document.getElementById('sourceLanguage');
+                this.targetLanguage = document.getElementById('targetLanguage');
+                this.inputLanguageIndicator = document.getElementById('inputLanguageIndicator');
+                this.outputLanguageIndicator = document.getElementById('outputLanguageIndicator');
+                this.autoSpeakIndicator = document.getElementById('autoSpeakIndicator');
+                this.autoSpeakToggle = document.getElementById('autoSpeakToggle');
+            }
+
+            initializeEventListeners() {
+                this.translateBtn.addEventListener('click', () => this.translateText());
+                this.voiceInputBtn.addEventListener('click', () => this.startVoiceInput());
+                this.speakBtn.addEventListener('click', () => this.speakTranslation());
+                this.swapLanguagesBtn.addEventListener('click', () => this.swapLanguages());
+                this.clearBtn.addEventListener('click', () => this.clearAll());
+                
+                this.speechRateSlider.addEventListener('input', (e) => {
+                    this.speechRateValue.textContent = e.target.value + 'x';
+                });
+
+                this.autoSpeakToggle.addEventListener('change', () => {
+                    this.saveSettings();
+                });
+
+                // Auto-save settings
+                document.querySelectorAll('select, input').forEach(element => {
+                    element.addEventListener('change', () => this.saveSettings());
+                });
+
+                // Auto-translate on text change (with debouncing)
+                let timeout;
+                this.inputText.addEventListener('input', () => {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => {
+                        if (this.inputText.value.trim()) {
+                            this.detectInputLanguage();
+                            this.translateText();
+                        }
+                    }, 1000);
+                });
+
+                this.targetLanguage.addEventListener('change', () => {
+                    this.updateVoiceOptions();
+                });
+            }
+
+            async initializeVoices() {
+                // Wait for ResponsiveVoice to load
+                if (typeof responsiveVoice !== 'undefined') {
+                    this.updateVoiceOptions();
+                } else {
+                    setTimeout(() => this.initializeVoices(), 500);
+                }
+
+                // Also load browser voices
+                if ('speechSynthesis' in window) {
+                    speechSynthesis.onvoiceschanged = () => {
+                        this.updateVoiceOptions();
+                    };
+                }
+            }
+
+            updateVoiceOptions() {
+                const targetLang = this.targetLanguage.value;
+                const voiceSelect = this.voiceSelect;
+                
+                // Clear existing options except auto
+                while (voiceSelect.children.length > 1) {
+                    voiceSelect.removeChild(voiceSelect.lastChild);
+                }
+
+                // Add ResponsiveVoice options
+                if (typeof responsiveVoice !== 'undefined') {
+                    const responsiveVoices = this.getResponsiveVoicesForLanguage(targetLang);
+                    responsiveVoices.forEach(voice => {
+                        const option = document.createElement('option');
+                        option.value = `responsive_${voice.name}`;
+                        option.textContent = `📢 ${voice.name} (ResponsiveVoice)`;
+                        voiceSelect.appendChild(option);
+                    });
+                }
+
+                // Add browser voices
+                if ('speechSynthesis' in window) {
+                    const voices = speechSynthesis.getVoices();
+                    const filteredVoices = voices.filter(voice => 
+                        voice.lang.startsWith(targetLang) || 
+                        (targetLang === 'ar' && (voice.lang.includes('ar') || voice.lang.includes('Arabic')))
+                    );
+                    
+                    filteredVoices.forEach(voice => {
+                        const option = document.createElement('option');
+                        option.value = `browser_${voice.name}`;
+                        option.textContent = `🌐 ${voice.name} (${voice.lang})`;
+                        voiceSelect.appendChild(option);
+                    });
+                }
+            }
+
+            getResponsiveVoicesForLanguage(langCode) {
+                const voiceMap = {
+                    'ar': [
+                        { name: 'Arabic Male', code: 'Arabic Male' },
+                        { name: 'Arabic Female', code: 'Arabic Female' }
+                    ],
+                    'en': [
+                        { name: 'US English Female', code: 'US English Female' },
+                        { name: 'US English Male', code: 'US English Male' },
+                        { name: 'UK English Female', code: 'UK English Female' },
+                        { name: 'UK English Male', code: 'UK English Male' }
+                    ],
+                    'es': [
+                        { name: 'Spanish Female', code: 'Spanish Female' },
+                        { name: 'Spanish Latin American Female', code: 'Spanish Latin American Female' }
+                    ],
+                    'fr': [
+                        { name: 'French Female', code: 'French Female' },
+                        { name: 'French Male', code: 'French Male' }
+                    ],
+                    'de': [
+                        { name: 'Deutsch Female', code: 'Deutsch Female' },
+                        { name: 'Deutsch Male', code: 'Deutsch Male' }
+                    ],
+                    'it': [
+                        { name: 'Italian Female', code: 'Italian Female' },
+                        { name: 'Italian Male', code: 'Italian Male' }
+                    ],
+                    'pt': [
+                        { name: 'Portuguese Female', code: 'Portuguese Female' },
+                        { name: 'Brazilian Portuguese Female', code: 'Brazilian Portuguese Female' }
+                    ],
+                    'ru': [
+                        { name: 'Russian Female', code: 'Russian Female' },
+                        { name: 'Russian Male', code: 'Russian Male' }
+                    ],
+                    'ja': [
+                        { name: 'Japanese Female', code: 'Japanese Female' },
+                        { name: 'Japanese Male', code: 'Japanese Male' }
+                    ],
+                    'ko': [
+                        { name: 'Korean Female', code: 'Korean Female' },
+                        { name: 'Korean Male', code: 'Korean Male' }
+                    ],
+                    'zh': [
+                        { name: 'Chinese Female', code: 'Chinese Female' },
+                        { name: 'Chinese (Hong Kong) Female', code: 'Chinese (Hong Kong) Female' },
+                        { name: 'Chinese Taiwan Female', code: 'Chinese Taiwan Female' }
+                    ],
+                    'hi': [
+                        { name: 'Hindi Female', code: 'Hindi Female' },
+                        { name: 'Hindi Male', code: 'Hindi Male' }
+                    ],
+                    'tr': [
+                        { name: 'Turkish Female', code: 'Turkish Female' },
+                        { name: 'Turkish Male', code: 'Turkish Male' }
+                    ]
+                };
+
+                return voiceMap[langCode] || [];
+            }
+
+            detectInputLanguage() {
+                const text = this.inputText.value.trim();
+                if (!text) return;
+
+                const detected = this.detectLanguage(text);
+                this.inputLanguageIndicator.textContent = `لغة مكتشفة: ${this.getLanguageName(detected)}`;
+                this.inputLanguageIndicator.style.display = 'inline-block';
+                
+                if (this.sourceLanguage.value === 'auto') {
+                    this.detectedLanguage = detected;
+                }
+            }
+
+            detectLanguage(text) {
+                // Advanced language detection
+                const patterns = {
+                    'ar': /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/,
+                    'en': /^[a-zA-Z\s.,!?;:"'()-]+$/,
+                    'es': /[ñáéíóúü]/i,
+                    'fr': /[àâäçéèêëïîôùûüÿæœ]/i,
+                    'de': /[äöüß]/i,
+                    'it': /[àèéìíîòóù]/i,
+                    'pt': /[ãõçáàâêéíóôúü]/i,
+                    'ru': /[\u0400-\u04FF]/,
+                    'ja': /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/,
+                    'ko': /[\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F]/,
+                    'zh': /[\u4E00-\u9FFF]/,
+                    'hi': /[\u0900-\u097F]/,
+                    'tr': /[çğıöşü]/i
+                };
+
+                for (const [lang, pattern] of Object.entries(patterns)) {
+                    if (pattern.test(text)) {
+                        return lang;
+                    }
+                }
+
+                return 'en'; // default
+            }
+
+            getLanguageName(code) {
+                const names = {
+                    'ar': 'العربية',
+                    'en': 'الإنجليزية',
+                    'es': 'الإسبانية',
+                    'fr': 'الفرنسية',
+                    'de': 'الألمانية',
+                    'it': 'الإيطالية',
+                    'pt': 'البرتغالية',
+                    'ru': 'الروسية',
+                    'ja': 'اليابانية',
+                    'ko': 'الكورية',
+                    'zh': 'الصينية',
+                    'hi': 'الهندية',
+                    'tr': 'التركية',
+                    'ur': 'الأردو'
+                };
+                return names[code] || code;
+            }
+
+            async translateText() {
+                const text = this.inputText.value.trim();
+                if (!text) {
+                    this.showError('يرجى إدخال نص للترجمة');
+                    return;
+                }
+
+                this.showLoading(true);
+                this.hideMessages();
+                this.autoSpeakIndicator.classList.remove('active');
+
+                // Clear any existing auto-speak timeout
+                if (this.autoSpeakTimeout) {
+                    clearTimeout(this.autoSpeakTimeout);
+                }
+
+                try {
+                    const sourceLang = this.sourceLanguage.value === 'auto' ? 
+                        (this.detectedLanguage || this.detectLanguage(text)) : 
+                        this.sourceLanguage.value;
+                    
+                    const targetLang = this.targetLanguage.value;
+                    const provider = document.getElementById('translationProvider').value;
+
+                    let translatedText;
+
+                    switch (provider) {
+                        case 'google':
+                            translatedText = await this.translateWithGoogle(text, sourceLang, targetLang);
+                            break;
+                        case 'mymemory':
+                            translatedText = await this.translateWithMyMemory(text, sourceLang, targetLang);
+                            break;
+                        case 'libre':
+                            translatedText = await this.translateWithLibre(text, sourceLang, targetLang);
+                            break;
+                        default:
+                            translatedText = await this.translateWithGoogle(text, sourceLang, targetLang);
+                    }
+
+                    this.outputText.value = translatedText;
+                    this.updateOutputLanguageIndicator(targetLang);
+                    this.updateVoiceOptions();
+                    
+                    this.showSuccess(`تمت الترجمة بنجاح من ${this.getLanguageName(sourceLang)} إلى ${this.getLanguageName(targetLang)}`);
+                    
+                    // تشغيل الكلام تلقائياً خلال ربع ثانية إذا كان مفعل
+                    if (this.autoSpeakToggle.checked) {
+                        this.autoSpeakIndicator.classList.add('active');
+                        this.autoSpeakTimeout = setTimeout(() => {
+                            this.autoSpeakTranslation();
+                        }, 250); // ربع ثانية
+                    }
+                    
+                } catch (error) {
+                    this.showError(`خطأ في الترجمة: ${error.message}`);
+                    console.error('Translation error:', error);
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            updateOutputLanguageIndicator(targetLang) {
+                this.outputLanguageIndicator.textContent = `اللغة: ${this.getLanguageName(targetLang)}`;
+                this.outputLanguageIndicator.style.display = 'inline-block';
+                
+                // Auto-detect direction
+                const direction = ['ar', 'ur', 'he', 'fa'].includes(targetLang) ? 'rtl' : 'ltr';
+                this.outputText.dir = direction;
+            }
+
+            async translateWithGoogle(text, sourceLang, targetLang) {
+                try {
+                    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    if (data && data[0] && data[0][0] && data[0][0][0]) {
+                        return data[0][0][0];
+                    }
+                    throw new Error('فشل في الحصول على الترجمة من Google');
+                } catch (error) {
+                    console.warn('Google Translate failed, trying fallback...');
+                    return this.fallbackTranslate(text, sourceLang, targetLang);
+                }
+            }
+
+            async translateWithMyMemory(text, sourceLang, targetLang) {
+                try {
+                    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    if (data && data.responseData && data.responseData.translatedText) {
+                        return data.responseData.translatedText;
+                    }
+                    throw new Error('فشل في الحصول على الترجمة من MyMemory');
+                } catch (error) {
+                    console.warn('MyMemory failed, trying fallback...');
+                    return this.fallbackTranslate(text, sourceLang, targetLang);
+                }
+            }
+
+            async translateWithLibre(text, sourceLang, targetLang) {
+                try {
+                    const url = 'https://libretranslate.de/translate';
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            q: text,
+                            source: sourceLang,
+                            target: targetLang,
+                            format: 'text'
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data && data.translatedText) {
+                        return data.translatedText;
+                    }
+                    throw new Error('فشل في الحصول على الترجمة من LibreTranslate');
+                } catch (error) {
+                    console.warn('LibreTranslate failed, trying fallback...');
+                    return this.fallbackTranslate(text, sourceLang, targetLang);
+                }
+            }
+
+            fallbackTranslate(text, sourceLang, targetLang) {
+                // Enhanced fallback dictionary
+                const translations = {
+                    'en-ar': {
+                        'hello': 'مرحبا', 'hi': 'أهلا', 'good morning': 'صباح الخير',
+                        'good evening': 'مساء الخير', 'thank you': 'شكرا لك',
+                        'please': 'من فضلك', 'yes': 'نعم', 'no': 'لا',
+                        'how are you': 'كيف حالك', 'fine': 'بخير',
+                        'what is your name': 'ما اسمك', 'my name is': 'اسمي',
+                        'where': 'أين', 'when': 'متى', 'why': 'لماذا',
+                        'how': 'كيف', 'what': 'ماذا', 'who': 'من'
+                    },
+                    'ar-en': {
+                        'مرحبا': 'hello', 'أهلا': 'hi', 'صباح الخير': 'good morning',
+                        'مساء الخير': 'good evening', 'شكرا': 'thank you',
+                        'من فضلك': 'please', 'نعم': 'yes', 'لا': 'no',
+                        'كيف حالك': 'how are you', 'بخير': 'fine',
+                        'ما اسمك': 'what is your name', 'اسمي': 'my name is',
+                        'أين': 'where', 'متى': 'when', 'لماذا': 'why',
+                        'كيف': 'how', 'ماذا': 'what', 'من': 'who'
+                    }
+                };
+
+                const key = `${sourceLang}-${targetLang}`;
+                const lowerText = text.toLowerCase();
+                
+                return translations[key]?.[lowerText] || 
+                       `[ترجمة محلية] ${text}`;
+            }
+
+            async autoSpeakTranslation() {
+                this.isAutoSpeaking = true;
+                this.autoSpeakIndicator.classList.remove('active');
+                
+                // Add visual indicator that auto-speech is happening
+                this.outputText.classList.add('pulse-animation');
+                
+                try {
+                    await this.speakTranslationInternal();
+                } catch (error) {
+                    console.error('Auto-speak failed:', error);
+                } finally {
+                    this.isAutoSpeaking = false;
+                    this.outputText.classList.remove('pulse-animation');
+                }
+            }
+
+            async speakTranslation() {
+                // Manual speak - don't add auto indicators
+                await this.speakTranslationInternal();
+            }
+
+            async speakTranslationInternal() {
+                const text = this.outputText.value.trim();
+                if (!text) {
+                    this.showError('لا يوجد نص مترجم للنطق');
+                    return;
+                }
+
+                const targetLang = this.targetLanguage.value;
+                const selectedVoice = this.voiceSelect.value;
+                const rate = parseFloat(this.speechRateSlider.value);
+
+                const originalBtnText = this.speakBtn.innerHTML;
+                this.speakBtn.innerHTML = `
+                    <div class="waveform">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                    جاري النطق...
+                `;
+                this.speakBtn.disabled = true;
+
+                try {
+                    if (selectedVoice === 'auto') {
+                        // Auto-select best voice for language
+                        await this.speakWithBestVoice(text, targetLang, rate);
+                    } else if (selectedVoice.startsWith('responsive_')) {
+                        // Use ResponsiveVoice
+                        const voiceName = selectedVoice.replace('responsive_', '');
+                        await this.speakWithResponsiveVoice(text, voiceName, rate);
+                    } else if (selectedVoice.startsWith('browser_')) {
+                        // Use browser speech synthesis
+                        const voiceName = selectedVoice.replace('browser_', '');
+                        await this.speakWithBrowserVoice(text, voiceName, rate);
+                    }
+                } catch (error) {
+                    if (!this.isAutoSpeaking) {
+                        this.showError(`خطأ في النطق: ${error.message}`);
+                    }
+                } finally {
+                    this.speakBtn.innerHTML = originalBtnText;
+                    this.speakBtn.disabled = false;
+                }
+            }
+
+            async speakWithBestVoice(text, language, rate) {
+                // Try ResponsiveVoice first for better quality
+                if (typeof responsiveVoice !== 'undefined') {
+                    const voiceMap = {
+                        'ar': 'Arabic Female',
+                        'en': 'US English Female',
+                        'es': 'Spanish Female',
+                        'fr': 'French Female',
+                        'de': 'Deutsch Female',
+                        'it': 'Italian Female',
+                        'pt': 'Portuguese Female',
+                        'ru': 'Russian Female',
+                        'ja': 'Japanese Female',
+                        'ko': 'Korean Female',
+                        'zh': 'Chinese Female',
+                        'hi': 'Hindi Female',
+                        'tr': 'Turkish Female'
+                    };
+
+                    const voice = voiceMap[language] || 'US English Female';
+                    await this.speakWithResponsiveVoice(text, voice, rate);
+                } else {
+                    // Fallback to browser voices
+                    await this.speakWithBrowserSynthesis(text, language, rate);
+                }
+            }
+
+            async speakWithResponsiveVoice(text, voiceName, rate) {
+                return new Promise((resolve, reject) => {
+                    if (typeof responsiveVoice === 'undefined') {
+                        reject(new Error('ResponsiveVoice غير متوفر'));
+                        return;
+                    }
+
+                    responsiveVoice.speak(text, voiceName, {
+                        rate: rate,
+                        volume: 0.8,
+                        onend: () => resolve(),
+                        onerror: (error) => reject(new Error('فشل في النطق بـ ResponsiveVoice'))
+                    });
+                });
+            }
+
+            async speakWithBrowserVoice(text, voiceName, rate) {
+                if (!('speechSynthesis' in window)) {
+                    throw new Error('متصفحك لا يدعم تحويل النص للكلام');
+                }
+
+                speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                const voices = speechSynthesis.getVoices();
+                const selectedVoice = voices.find(voice => voice.name === voiceName);
+
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                    utterance.lang = selectedVoice.lang;
+                }
+
+                utterance.rate = rate;
+                utterance.volume = 0.8;
+
+                return new Promise((resolve, reject) => {
+                    utterance.onend = () => resolve();
+                    utterance.onerror = () => reject(new Error('فشل في النطق'));
+                    speechSynthesis.speak(utterance);
+                });
+            }
+
+            async speakWithBrowserSynthesis(text, language, rate) {
+                if (!('speechSynthesis' in window)) {
+                    throw new Error('متصفحك لا يدعم تحويل النص للكلام');
+                }
+
+                speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = rate;
+                utterance.volume = 0.8;
+
+                // Language mapping for better voice selection
+                const langMap = {
+                    'ar': ['ar-SA', 'ar', 'ar-EG', 'ar-AE'],
+                    'en': ['en-US', 'en-GB', 'en'],
+                    'es': ['es-ES', 'es-MX', 'es'],
+                    'fr': ['fr-FR', 'fr-CA', 'fr'],
+                    'de': ['de-DE', 'de'],
+                    'it': ['it-IT', 'it'],
+                    'pt': ['pt-BR', 'pt-PT', 'pt'],
+                    'ru': ['ru-RU', 'ru'],
+                    'ja': ['ja-JP', 'ja'],
+                    'ko': ['ko-KR', 'ko'],
+                    'zh': ['zh-CN', 'zh-TW', 'zh'],
+                    'hi': ['hi-IN', 'hi'],
+                    'tr': ['tr-TR', 'tr']
+                };
+
+                const preferredLangs = langMap[language] || [language];
+                const voices = speechSynthesis.getVoices();
+
+                for (const lang of preferredLangs) {
+                    const voice = voices.find(v => v.lang.startsWith(lang));
+                    if (voice) {
+                        utterance.voice = voice;
+                        utterance.lang = voice.lang;
+                        break;
+                    }
+                }
+
+                return new Promise((resolve, reject) => {
+                    utterance.onend = () => resolve();
+                    utterance.onerror = () => reject(new Error('فشل في النطق'));
+                    speechSynthesis.speak(utterance);
+                });
+            }
+
+            async startVoiceInput() {
+                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                    this.showError('متصفحك لا يدعم التعرف على الصوت');
+                    return;
+                }
+
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechRecognition();
+                
+                const sourceLang = this.sourceLanguage.value === 'auto' ? 'ar-SA' : 
+                                  this.sourceLanguage.value === 'ar' ? 'ar-SA' : 
+                                  this.sourceLanguage.value + '-' + this.sourceLanguage.value.toUpperCase();
+                
+                recognition.lang = sourceLang;
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 3;
+
+                this.voiceInputBtn.innerHTML = `
+                    <div class="waveform">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                    جاري الاستماع...
+                `;
+                this.voiceInputBtn.disabled = true;
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    this.inputText.value = transcript;
+                    this.detectInputLanguage();
+                    this.translateText();
+                    this.showSuccess('تم التعرف على الصوت بنجاح');
+                };
+
+                recognition.onerror = (event) => {
+                    this.showError(`خطأ في التعرف على الصوت: ${event.error}`);
+                };
+
+                recognition.onend = () => {
+                    this.voiceInputBtn.innerHTML = '🎤 الإدخال الصوتي';
+                    this.voiceInputBtn.disabled = false;
+                };
+
+                try {
+                    recognition.start();
+                } catch (error) {
+                    this.showError('فشل في بدء التعرف على الصوت');
+                    this.voiceInputBtn.innerHTML = '🎤 الإدخال الصوتي';
+                    this.voiceInputBtn.disabled = false;
+                }
+            }
+
+            swapLanguages() {
+                const sourceSelect = this.sourceLanguage;
+                const targetSelect = this.targetLanguage;
+                
+                if (sourceSelect.value === 'auto') {
+                    sourceSelect.value = this.detectedLanguage || 'en';
+                }
+                
+                const tempValue = sourceSelect.value;
+                sourceSelect.value = targetSelect.value;
+                targetSelect.value = tempValue;
+
+                // Swap text content
+                const tempText = this.inputText.value;
+                this.inputText.value = this.outputText.value;
+                this.outputText.value = tempText;
+
+                // Update indicators
+                this.detectInputLanguage();
+                this.updateVoiceOptions();
+
+                // Auto-translate if there's text
+                if (this.inputText.value.trim()) {
+                    this.translateText();
+                }
+            }
+
+            clearAll() {
+                this.inputText.value = '';
+                this.outputText.value = '';
+                this.inputLanguageIndicator.style.display = 'none';
+                this.outputLanguageIndicator.style.display = 'none';
+                this.autoSpeakIndicator.classList.remove('active');
+                this.hideMessages();
+                
+                // Clear auto-speak timeout
+                if (this.autoSpeakTimeout) {
+                    clearTimeout(this.autoSpeakTimeout);
+                }
+                
+                // Stop any ongoing speech
+                if ('speechSynthesis' in window) {
+                    speechSynthesis.cancel();
+                }
+                if (typeof responsiveVoice !== 'undefined') {
+                    responsiveVoice.cancel();
+                }
+            }
+
+            saveSettings() {
+                const settings = {
+                    sourceLanguage: this.sourceLanguage.value,
+                    targetLanguage: this.targetLanguage.value,
+                    translationProvider: document.getElementById('translationProvider').value,
+                    ttsProvider: document.getElementById('ttsProvider').value,
+                    speechRate: this.speechRateSlider.value,
+                    voiceSelect: this.voiceSelect.value,
+                    autoSpeak: this.autoSpeakToggle.checked
+                };
+                localStorage.setItem('smartTranslatorSettings', JSON.stringify(settings));
+            }
+
+            loadSettings() {
+                const saved = localStorage.getItem('smartTranslatorSettings');
+                if (saved) {
+                    const settings = JSON.parse(saved);
+                    Object.keys(settings).forEach(key => {
+                        const element = document.getElementById(key);
+                        if (element) {
+                            if (element.type === 'checkbox') {
+                                element.checked = settings[key];
+                            } else {
+                                element.value = settings[key];
+                            }
+                        }
+                    });
+                    if (settings.speechRate) {
+                        this.speechRateValue.textContent = settings.speechRate + 'x';
+                    }
+                    if (settings.autoSpeak !== undefined) {
+                        this.autoSpeakToggle.checked = settings.autoSpeak;
+                    }
+                }
+            }
+
+            showLoading(show) {
+                this.loading.classList.toggle('active', show);
+                this.translateBtn.disabled = show;
+            }
+
+            showError(message) {
+                this.errorMessage.textContent = message;
+                this.errorMessage.style.display = 'block';
+                setTimeout(() => this.hideMessages(), 5000);
+            }
+
+            showSuccess(message) {
+                this.successMessage.textContent = message;
+                this.successMessage.style.display = 'block';
+                setTimeout(() => this.hideMessages(), 3000);
+            }
+
+            hideMessages() {
+                this.errorMessage.style.display = 'none';
+                this.successMessage.style.display = 'none';
+            }
+        }
+
+        // Initialize the translator when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new SmartArabicTranslator();
+        });
+
+        // Initialize voices when ResponsiveVoice loads
+        window.addEventListener('load', () => {
+            if (typeof responsiveVoice !== 'undefined') {
+                responsiveVoice.OnVoiceReady = () => {
+                    console.log('ResponsiveVoice جاهز للاستخدام');
+                };
+            }
+        });
+    </script>
+</body>
+</html>
